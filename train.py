@@ -13,10 +13,10 @@ import matplotlib.pyplot as plt
 from tqdm import tqdm
 
 from models.model import RetinaNet
-from eval import evaluate
+# from eval import evaluate
 from datasets import *
 from utils.utils import *
-from torch_warmup_lr import WarmupLR
+# from torch_warmup_lr import WarmupLR
 
 mixed_precision = True
 try:  
@@ -70,7 +70,7 @@ def train_model(args, hyps):
     loader = data.DataLoader(
         dataset=ds,
         batch_size=batch_size,
-        num_workers=8,
+        num_workers=0,
         collate_fn=collater,
         shuffle=True,
         pin_memory=True,
@@ -84,7 +84,7 @@ def train_model(args, hyps):
     # Optimizer
     optimizer = optim.Adam(model.parameters(), lr=hyps['lr0'])
     scheduler = optim.lr_scheduler.MultiStepLR(optimizer, milestones=[round(epochs * x) for x in [0.7, 0.9]], gamma=0.1)
-    scheduler = WarmupLR(scheduler, init_lr=hyps['warmup_lr'], num_warmup=hyps['warm_epoch'], warmup_strategy='cos')
+    # scheduler = WarmupLR(scheduler, init_lr=hyps['warmup_lr'], num_warmup=hyps['warm_epoch'], warmup_strategy='cos')
     scheduler.last_epoch = start_epoch - 1
 
     if torch.cuda.is_available():
@@ -122,7 +122,7 @@ def train_model(args, hyps):
         model, optimizer = amp.initialize(model, optimizer, opt_level='O1', verbosity=0)
 
     model_info(model, report='summary')  # 'full' or 'summary'
-    results = (0, 0, 0, 0)
+    # results = (0, 0, 0, 0)
 
     for epoch in range(start_epoch,epochs):
         print(('\n' + '%10s' * 7) % ('Epoch', 'gpu_mem',  'cls', 'reg', 'total', 'targets', 'img_size'))
@@ -169,6 +169,7 @@ def train_model(args, hyps):
             s = ('%10s' * 2 + '%10.3g' * 5) % (
                   '%g/%g' % (epoch, epochs - 1), '%.3gG' % mem, *mloss, mloss.sum(), gt_boxes.shape[1], min(ims.shape[2:]))
             pbar.set_description(s)
+        torch.cuda.empty_cache()
 
         # Update scheduler
         scheduler.step()
@@ -204,6 +205,7 @@ def train_model(args, hyps):
         if fitness > best_fitness:
             best_fitness = fitness
 
+
         with open(results_file, 'r') as f:
             # Create checkpoint
             chkpt = {'epoch': epoch,
@@ -216,6 +218,7 @@ def train_model(args, hyps):
 
         # Save last checkpoint
         torch.save(chkpt, last)
+
         # Save best checkpoint
         if best_fitness == fitness:
             torch.save(chkpt, best) 
@@ -242,14 +245,15 @@ if __name__ == '__main__':
     parser.add_argument('--freeze_bn', type=bool, default=False)
     parser.add_argument('--weight', type=str, default='')   # 
     parser.add_argument('--multi-scale', action='store_true', help='adjust (67% - 150%) img_size every 10 batches')
-     # HRSC
-    parser.add_argument('--dataset', type=str, default='HRSC2016')      
-    parser.add_argument('--train_path', type=str, default='HRSC2016/train.txt')    
-    parser.add_argument('--test_path', type=str, default='HRSC2016/test.txt')        
+    
+    # HRSC
+    # parser.add_argument('--dataset', type=str, default='HRSC2016')      
+    # parser.add_argument('--train_path', type=str, default='HRSC2016/train.txt')    
+    # parser.add_argument('--test_path', type=str, default='HRSC2016/test.txt')        
 
     # DOTA
-    # parser.add_argument('--dataset', type=str, default='DOTA')    
-    # parser.add_argument('--train_path', type=str, default='DOTA/trainval.txt')
+    parser.add_argument('--dataset', type=str, default='DOTA')    
+    parser.add_argument('--train_path', type=str, default='/content/DOTA/train/train.txt')
 
     # IC15
     # parser.add_argument('--dataset', type=str, default='IC15')

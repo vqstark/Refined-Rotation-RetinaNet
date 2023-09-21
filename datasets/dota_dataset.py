@@ -24,7 +24,7 @@ class DOTADataset(data.Dataset):
             self.classes = ('__background__', 'plane', 'ship', 'storage-tank', 'baseball-diamond', 
                                 'tennis-court', 'basketball-court', 'ground-track-field', 'harbor', 
                                 'bridge', 'large-vehicle', 'small-vehicle', 'helicopter', 'roundabout', 
-                                'soccer-ball-field' , 'swimming-pool')   
+                                'soccer-ball-field' , 'swimming-pool', 'container-crane')   
         self.num_classes = len(self.classes)
         self.class_to_ind = dict(zip(self.classes, range(self.num_classes)))    
         self.augment = augment
@@ -77,19 +77,19 @@ class DOTADataset(data.Dataset):
 
     def _load_annotation(self, index):
         root_dir = index.split('/images/P')[0]
-        label_dir = os.path.join(root_dir, 'labelTxt')
+        label_dir = os.path.join(root_dir, 'labels')
         _ , img_name = os.path.split(index)
         filename = os.path.join(label_dir, img_name[:-4]+'.txt')
         boxes, gt_classes = [], []
         with open(filename,'r',encoding='utf-8-sig') as f:
             content = f.read()
             objects = content.split('\n')
-            for obj in objects:
+            for obj in objects[2:]:
                 if len(obj) != 0 :
-                    *box, class_name, difficult = obj.split(' ')
+                    *box, class_name, difficult = obj.split()
                     if difficult == 2:
-                        continues
-                    box = [ eval(x) for x in  obj.split(' ')[:8] ]
+                        continue
+                    box = [ eval(x) for x in  obj.split()[:8] ]
                     label = self.class_to_ind[class_name] 
                     boxes.append(box)
                     gt_classes.append(label)

@@ -5,7 +5,7 @@ warm_epoch:1
 
 
 # setting
-num_classes: 1
+num_classes: 16 #not include background
 
 # training
 epochs: 100
