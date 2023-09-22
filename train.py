@@ -70,7 +70,7 @@ def train_model(args, hyps):
     loader = data.DataLoader(
         dataset=ds,
         batch_size=batch_size,
-        num_workers=0,
+        num_workers=os.cpu_count() - 1,
         collate_fn=collater,
         shuffle=True,
         pin_memory=True,
@@ -122,7 +122,7 @@ def train_model(args, hyps):
         model, optimizer = amp.initialize(model, optimizer, opt_level='O1', verbosity=0)
 
     model_info(model, report='summary')  # 'full' or 'summary'
-    # results = (0, 0, 0, 0)
+    results = (0, 0, 0, 0)
 
     for epoch in range(start_epoch,epochs):
         print(('\n' + '%10s' * 7) % ('Epoch', 'gpu_mem',  'cls', 'reg', 'total', 'targets', 'img_size'))
@@ -165,11 +165,11 @@ def train_model(args, hyps):
             # Print batch results
             loss_items = torch.stack([loss_cls, loss_reg], 0).detach()
             mloss = (mloss * i + loss_items) / (i + 1)  # update mean losses
-            mem = torch.cuda.memory_cached() / 1E9 if torch.cuda.is_available() else 0  # (GB)
+            mem = torch.cuda.memory_reserved() / 1E9 if torch.cuda.is_available() else 0  # (GB)
             s = ('%10s' * 2 + '%10.3g' * 5) % (
                   '%g/%g' % (epoch, epochs - 1), '%.3gG' % mem, *mloss, mloss.sum(), gt_boxes.shape[1], min(ims.shape[2:]))
             pbar.set_description(s)
-        torch.cuda.empty_cache()
+            torch.cuda.empty_cache()
 
         # Update scheduler
         scheduler.step()
@@ -241,7 +241,7 @@ if __name__ == '__main__':
     # config
     parser.add_argument('--hyp', type=str, default='hyp.py', help='hyper-parameter path')
     # network
-    parser.add_argument('--backbone', type=str, default='res50')
+    parser.add_argument('--backbone', type=str, default='res34')
     parser.add_argument('--freeze_bn', type=bool, default=False)
     parser.add_argument('--weight', type=str, default='')   # 
     parser.add_argument('--multi-scale', action='store_true', help='adjust (67% - 150%) img_size every 10 batches')
@@ -280,11 +280,11 @@ if __name__ == '__main__':
     # parser.add_argument('--train_path', type=str, default='NWPU_VHR/train.txt')
     # parser.add_argument('--test_path', type=str, default='NWPU_VHR/test.txt')
 
-    parser.add_argument('--training_size', type=int, default=800)
+    parser.add_argument('--training_size', type=int, default=500)
     parser.add_argument('--resume', action='store_true', help='resume training from last.pth')
     parser.add_argument('--load', action='store_true', help='load training from last.pth')
     parser.add_argument('--augment', action='store_true', help='data augment')
-    parser.add_argument('--target_size', type=int, default=[800])   
+    parser.add_argument('--target_size', type=int, default=[500])   
     #
 
     arg = parser.parse_args()
