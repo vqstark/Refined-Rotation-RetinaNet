@@ -9,7 +9,7 @@ import math
 from dota_utils import GetFileFromThisRootDir
 import cv2
 import shapely.geometry as shgeo
-import dota_utils as util
+from . import dota_utils as util
 import copy
 from multiprocessing import Pool
 from functools import partial

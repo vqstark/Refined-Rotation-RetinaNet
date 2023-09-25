@@ -2,6 +2,7 @@ import os
 import time
 import sys
 import glob
+import shutil
 import argparse
 from PIL import Image
 from tqdm import tqdm
@@ -29,8 +30,15 @@ def remove_non_car_labels(dota_path):
     train_label_path = os.path.join(dota_path, 'train', 'labels')
     val_label_path = os.path.join(dota_path, 'val', 'labels')
 
-    os.mkdir(os.path.join(dota_path, 'train', 'labelTxt'))
-    os.mkdir(os.path.join(dota_path, 'val', 'labelTxt'))
+    car_train_label_path = os.path.join(dota_path, 'train', 'labelTxt')
+    if os.path.exists(car_train_label_path):
+      shutil.rmtree(car_train_label_path)
+    os.mkdir(car_train_label_path)
+
+    car_val_label_path = os.path.join(dota_path, 'val', 'labelTxt')
+    if os.path.exists(car_val_label_path):
+      shutil.rmtree(car_val_label_path)
+    os.mkdir(car_val_label_path)
 
     files = sorted(glob.glob(os.path.join(train_label_path, '**.*' )))
     
@@ -40,7 +48,7 @@ def remove_non_car_labels(dota_path):
             lines = f.readlines()
         f.close()
         with open(os.path.join(dota_path, 'train', 'labelTxt', filename), 'w') as f:
-            for line in lines:
+            for line in lines[2:]:
                 if line.split()[-2] in ['large-vehicle', 'small-vehicle']:
                     f.write(line)
         f.close()
@@ -65,8 +73,8 @@ def generate_image_ds(train_img_path, set_file):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Hyperparams')
-    parser.add_argument('--target_size', type=int, default=[500])
-    parser.add_argument('--overlap', type=int, default=[100])
+    parser.add_argument('--target_size', type=int, default=500)
+    parser.add_argument('--overlap', type=int, default=100)
     parser.add_argument('--dota_path', type=str, default='/content/DOTA')
     args = parser.parse_args()
 
