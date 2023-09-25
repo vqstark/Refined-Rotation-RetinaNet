@@ -10,8 +10,10 @@ import math
     some basic functions which are useful for process DOTA data
 """
 
-wordname_15 = ['plane', 'baseball-diamond', 'bridge', 'ground-track-field', 'small-vehicle', 'large-vehicle', 'ship', 'tennis-court',
-               'basketball-court', 'storage-tank',  'soccer-ball-field', 'roundabout', 'harbor', 'swimming-pool', 'helicopter']
+classes = ['plane', 'ship', 'storage-tank', 'baseball-diamond', 
+                                'tennis-court', 'basketball-court', 'ground-track-field', 'harbor', 
+                                'bridge', 'large-vehicle', 'small-vehicle', 'helicopter', 'roundabout', 
+                                'soccer-ball-field' , 'swimming-pool', 'container-crane']
 
 def custombasename(fullname):
     return os.path.basename(os.path.splitext(fullname)[0])
@@ -142,7 +144,7 @@ def groundtruth2Task1(srcpath, dstpath):
     filelist = GetFileFromThisRootDir(srcpath)
     # names = [custombasename(x.strip())for x in filelist]
     filedict = {}
-    for cls in wordname_15:
+    for cls in classes:
         fd = open(os.path.join(dstpath, 'Task1_') + cls + r'.txt', 'w')
         filedict[cls] = fd
     for filepath in filelist:
@@ -271,7 +273,7 @@ def detections2Task1(srcpath, dstpath):
     filelist = GetFileFromThisRootDir(srcpath)
     # names = [custombasename(x.strip())for x in filelist]
     filedict = {}
-    for cls in wordname_15:
+    for cls in classes:
         fd = open(os.path.join(dstpath, 'Task1_') + cls + r'.txt', 'w')
         filedict[cls] = fd
     for filepath in filelist:
@@ -279,7 +281,7 @@ def detections2Task1(srcpath, dstpath):
 
         subname = custombasename(filepath)
         pattern2 = re.compile(r'__([\d+\.]+)__\d+___')
-        rate = re.findall(pattern2, subname)[0]
+        # rate = re.findall(pattern2, subname)[0]
 
         for obj in objects:
             category = obj['classname']

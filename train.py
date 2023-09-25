@@ -13,26 +13,10 @@ import matplotlib.pyplot as plt
 from tqdm import tqdm
 
 from models.model import RetinaNet
-# from eval import evaluate
+from eval import evaluate
 from datasets import *
 from utils.utils import *
 # from torch_warmup_lr import WarmupLR
-
-mixed_precision = True
-try:  
-    from apex import amp
-except:
-    print('fail to speed up training via apex \n')
-    mixed_precision = False  # not installed
-
-DATASETS = {'VOC' : VOCDataset ,
-            'IC15': IC15Dataset,
-            'IC13': IC13Dataset,
-            'HRSC2016': HRSCDataset,
-            'DOTA':DOTADataset,
-            'UCAS_AOD':UCAS_AODDataset,
-            'NWPU_VHR':NWPUDataset
-            }
 
 
 def train_model(args, hyps):
@@ -61,11 +45,9 @@ def train_model(args, hyps):
         print('Using multi-scale %g - %g' % (scales[0], scales[-1]))   
     else :
         scales = args.training_size 
-############
 
     # dataloader
-    assert args.dataset in DATASETS.keys(), 'Not supported dataset!'
-    ds = DATASETS[args.dataset](dataset=args.train_path, augment=args.augment)
+    ds = DOTADataset(dataset=args.train_path, augment=args.augment)
     collater = Collater(scales=scales, keep_ratio=True, multiple=32)
     loader = data.DataLoader(
         dataset=ds,
@@ -118,14 +100,11 @@ def train_model(args, hyps):
         del chkpt
  
 
-    if mixed_precision:
-        model, optimizer = amp.initialize(model, optimizer, opt_level='O1', verbosity=0)
-
     model_info(model, report='summary')  # 'full' or 'summary'
     results = (0, 0, 0, 0)
 
     for epoch in range(start_epoch,epochs):
-        print(('\n' + '%10s' * 7) % ('Epoch', 'gpu_mem',  'cls', 'reg', 'total', 'targets', 'img_size'))
+        print(('\n' + '%10s' * 7) % ('Epoch', 'gpu_mem',  'cls loss', 'reg loss', 'total loss', 'targets', 'img_size'))
         pbar = tqdm(enumerate(loader), total=len(loader))  # progress bar
         mloss = torch.zeros(2).cuda()
         for i, (ni, batch) in enumerate(pbar):
@@ -146,18 +125,14 @@ def train_model(args, hyps):
             loss_cls, loss_reg = losses['loss_cls'].mean(), losses['loss_reg'].mean()
             loss = loss_cls + loss_reg
             if not torch.isfinite(loss):
-                import ipdb; ipdb.set_trace()
+                # import ipdb; ipdb.set_trace()
                 print('WARNING: non-finite loss, ending training ')
                 break
             if bool(loss == 0):
                 continue
 
             # calculate gradient
-            if mixed_precision:
-                with amp.scale_loss(loss, optimizer) as scaled_loss:
-                    scaled_loss.backward()
-            else:
-                loss.backward()
+            loss.backward()
 
             nn.utils.clip_grad_norm_(model.parameters(), 0.1)
             optimizer.step()
@@ -180,14 +155,12 @@ def train_model(args, hyps):
             if torch.cuda.device_count() > 1:
                 results = evaluate(target_size=args.target_size,
                                    test_path=args.test_path,
-                                   dataset=args.dataset,
                                    model=model.module, 
                                    hyps=hyps,
                                    conf = 0.01 if final_epoch else 0.1)    
             else:
                 results = evaluate(target_size=args.target_size,
                                    test_path=args.test_path,
-                                   dataset=args.dataset,
                                    model=model,
                                    hyps=hyps,
                                    conf = 0.01 if final_epoch else 0.1) #  p, r, map, f1
@@ -198,10 +171,7 @@ def train_model(args, hyps):
             f.write(s + '%10.3g' * 4 % results + '\n')  # P, R, mAP, F1, test_losses=(GIoU, obj, cls)
 
         ##   Checkpoint
-        if arg.dataset in ['IC15', ['IC13']]:
-            fitness = results[-1]   # Update best f1
-        else :
-            fitness = results[-2]   # Update best mAP
+        fitness = results[-2]   # Update best mAP
         if fitness > best_fitness:
             best_fitness = fitness
 
@@ -245,47 +215,12 @@ if __name__ == '__main__':
     parser.add_argument('--freeze_bn', type=bool, default=False)
     parser.add_argument('--weight', type=str, default='')   # 
     parser.add_argument('--multi-scale', action='store_true', help='adjust (67% - 150%) img_size every 10 batches')
-    
-    # HRSC
-    # parser.add_argument('--dataset', type=str, default='HRSC2016')      
-    # parser.add_argument('--train_path', type=str, default='HRSC2016/train.txt')    
-    # parser.add_argument('--test_path', type=str, default='HRSC2016/test.txt')        
-
-    # DOTA
-    parser.add_argument('--dataset', type=str, default='DOTA')    
     parser.add_argument('--train_path', type=str, default='/content/DOTA/train/train.txt')
-
-    # IC15
-    # parser.add_argument('--dataset', type=str, default='IC15')
-    # parser.add_argument('--train_path', type=str, default='ICDAR15/train.txt')
-    # parser.add_argument('--test_path', type=str, default='ICDAR15/test')
-
-    # IC13
-    # parser.add_argument('--dataset', type=str, default='IC13')
-    # parser.add_argument('--train_path', type=str, default='ICDAR13/train.txt')
-    # parser.add_argument('--test_path', type=str, default='ICDAR13/test')
-
-    # UCAS-AOD
-    # parser.add_argument('--dataset', type=str, default='UCAS_AOD')
-    # parser.add_argument('--train_path', type=str, default='UCAS_AOD/train.txt')
-    # parser.add_argument('--test_path', type=str, default='UCAS_AOD/test.txt')
-
-    # VOC2007
-    # parser.add_argument('--dataset', type=str, default='VOC')
-    # parser.add_argument('--train_path', type=str, default='VOC2007/ImageSets/Main/trainval.txt')
-    # parser.add_argument('--test_path', type=str, default='VOC2007/ImageSets/Main/test.txt')
-
-    # NWPU-VHR10
-    # parser.add_argument('--dataset', type=str, default='NWPU_VHR')
-    # parser.add_argument('--train_path', type=str, default='NWPU_VHR/train.txt')
-    # parser.add_argument('--test_path', type=str, default='NWPU_VHR/test.txt')
-
     parser.add_argument('--training_size', type=int, default=500)
     parser.add_argument('--resume', action='store_true', help='resume training from last.pth')
-    parser.add_argument('--load', action='store_true', help='load training from last.pth')
+    parser.add_argument('--load', action='store_true', help='load training from best.pth')
     parser.add_argument('--augment', action='store_true', help='data augment')
     parser.add_argument('--target_size', type=int, default=[500])   
-    #
 
     arg = parser.parse_args()
     hyps = hyp_parse(arg.hyp)

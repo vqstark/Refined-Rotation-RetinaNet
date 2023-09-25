@@ -15,53 +15,35 @@ from utils.bbox import rbox_2_quad
 from utils.utils import is_image, draw_caption, hyp_parse
 from utils.utils import show_dota_results
 from eval import evaluate
-from datasets.DOTA_devkit.ResultMerge_multi_process import ResultMerge
-
-DATASETS = {'VOC' : VOCDataset ,
-            'IC15': IC15Dataset,
-            'IC13': IC13Dataset,
-            'HRSC2016': HRSCDataset,
-            'DOTA':DOTADataset,
-            'UCAS_AOD':UCAS_AODDataset,
-            'NWPU_VHR':NWPUDataset
-            }
-
-def generate_colors(dataset):
-    num_colors = {'VOC' : 20 ,
-            'IC15': 1,
-            'IC13': 1,
-            'HRSC2016': 1,
-            'DOTA':15,
-            'UCAS_AOD':2,
-            'NWPU_VHR':10
-            }
-    if num_colors[dataset] == 1:
-        colors = [(0, 255, 0)]
-    elif num_colors[dataset] == 2:
-        colors = [(0, 255, 0), (0, 0, 255)]
-    else:
-        colors = [[random.randint(0, 255) for _ in range(3)] for _ in range(num_colors[dataset])]
-    return colors
-
 
 def demo(args):
     hyps = hyp_parse(args.hyp)
-    ds = DATASETS[args.dataset](level = 1)
+
+    ds = DOTADataset(level = 1)
+    colors = [[random.randint(0, 255) for _ in range(3)] for _ in range(int(hyps['num_classes']))]
+
     model = RetinaNet(backbone=args.backbone, hyps=hyps)
-    colors = generate_colors(args.dataset)
+
     if args.weight.endswith('.pth'):
-        chkpt = torch.load(args.weight)
+        if args.device == 'CPU':
+            chkpt = torch.load(args.weight, map_location=torch.device('cpu'))
+        else:
+            chkpt = torch.load(args.weight)
         # load model
         if 'model' in chkpt.keys():
             model.load_state_dict(chkpt['model'])
         else:
             model.load_state_dict(chkpt)
-        print('load weight from: {}'.format(args.weight))
+        print('Load weight from: {}'.format(args.weight))
     model.eval()
 
     t0 = time.time()
-    if not args.dataset == 'DOTA':
+    if args.type == 'patch':
         ims_list = [x for x in os.listdir(args.ims_dir) if is_image(x)]
+        if args.save_img:
+            if os.path.exists('outputs/dota_out'):
+                shutil.rmtree('outputs/dota_out')
+            os.mkdir('outputs/dota_out')
         for idx, im_name in enumerate(ims_list):
             s = ''
             t = time.time()
@@ -97,15 +79,13 @@ def demo(args):
                             pts = np.array([rbox_2_quad(bbox[5:]).reshape((4, 2))], dtype=np.int32)
                             cv2.drawContours(src, pts, 0, color=(0, 0, 255), thickness=2)
             print('%sDone. (%.3fs) %d objs' % (s, time.time() - t, len(cls_dets)))
-            # save image
-
-            out_path = os.path.join('outputs' , os.path.split(im_path)[1])
-            cv2.imwrite(out_path, src)
-    ## DOTA detct on large image
+            if args.save_img:
+                out_path = os.path.join('outputs/dota_out' , os.path.split(im_path)[1])
+                cv2.imwrite(out_path, src)
+    ## DOTA detect on scene image
     else:
         evaluate(args.target_size,
                 args.ims_dir,    
-                'DOTA',
                 args.backbone,
                 args.weight,
                 hyps = hyps,
@@ -114,41 +94,22 @@ def demo(args):
             shutil.rmtree('outputs/dota_out')
         os.mkdir('outputs/dota_out')
         exec('cd outputs &&  rm -rf detections && rm -rf integrated  && rm -rf merged')    
-        ResultMerge('outputs/detections', 
-                    'outputs/integrated',
-                    'outputs/merged',
-                    'outputs/dota_out')
+
         img_path = os.path.join(args.ims_dir,'images')
         label_path = 'outputs/dota_out'
-        save_imgs =  False
+        save_imgs =  True
         if save_imgs:
             show_dota_results(img_path,label_path)
     print('Done. (%.3fs)' % (time.time() - t0))
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Hyperparams')
-    parser.add_argument('--backbone', type=str, default='res50')
+    parser.add_argument('--backbone', type=str, default='res34')
     parser.add_argument('--hyp', type=str, default='hyp.py', help='hyper-parameter path')
     parser.add_argument('--weight', type=str, default='weights/last.pth')
-    # HRSC
-    # parser.add_argument('--dataset', type=str, default='HRSC2016')    
-    # parser.add_argument('--ims_dir', type=str, default='HRSC2016/Test') 
-    # DOTA 
-    # parser.add_argument('--dataset', type=str, default='DOTA')
-    # parser.add_argument('--ims_dir', type=str, default='DOTA/test')
-    # UCAS-AOD
-    parser.add_argument('--dataset', type=str, default='UCAS_AOD')
-    parser.add_argument('--ims_dir', type=str, default='UCAS_AOD/Test')  
-    # IC13
-    # parser.add_argument('--dataset', type=str, default='IC13')
-    # parser.add_argument('--ims_dir', type=str, default='ICDAR13/test')
-    # NWPU
-    # parser.add_argument('--dataset', type=str, default='HRSC2016')
-    # parser.add_argument('--ims_dir', type=str, default='HRSC2016/Test')   
-    
-
-
-
-    parser.add_argument('--target_size', type=int, default=[800])
+    parser.add_argument('--ims_dir', type=str, default='patch_test_imgs')
+    parser.add_argument('--type', type=str, default='patch', help = 'Detect on patch or scene')
+    parser.add_argument('--save_img', type=str, default=True, help = 'Save detected images or not')
+    parser.add_argument('--device', type=str, default='CPU', help = 'Your device')
+    parser.add_argument('--target_size', type=int, default=[500])
     demo(parser.parse_args())
-

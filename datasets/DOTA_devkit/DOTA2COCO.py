@@ -3,8 +3,10 @@ import os
 import cv2
 import json
 
-wordname_15 = ['plane', 'baseball-diamond', 'bridge', 'ground-track-field', 'small-vehicle', 'large-vehicle', 'ship', 'tennis-court',
-               'basketball-court', 'storage-tank',  'soccer-ball-field', 'roundabout', 'harbor', 'swimming-pool', 'helicopter']
+classes = ['plane', 'ship', 'storage-tank', 'baseball-diamond', 
+                                'tennis-court', 'basketball-court', 'ground-track-field', 'harbor', 
+                                'bridge', 'large-vehicle', 'small-vehicle', 'helicopter', 'roundabout', 
+                                'soccer-ball-field' , 'swimming-pool', 'container-crane']
 
 def DOTA2COCO(srcpath, destfile):
     imageparent = os.path.join(srcpath, 'images')
@@ -21,7 +23,7 @@ def DOTA2COCO(srcpath, destfile):
     data_dict['images'] = []
     data_dict['categories'] = []
     data_dict['annotations'] = []
-    for idex, name in enumerate(wordname_15):
+    for idex, name in enumerate(classes):
         single_cat = {'id': idex + 1, 'name': name, 'supercategory': name}
         data_dict['categories'].append(single_cat)
 
@@ -49,7 +51,7 @@ def DOTA2COCO(srcpath, destfile):
             for obj in objects:
                 single_obj = {}
                 single_obj['area'] = obj['area']
-                single_obj['category_id'] = wordname_15.index(obj['name']) + 1
+                single_obj['category_id'] = classes.index(obj['name']) + 1
                 single_obj['segmentation'] = []
                 single_obj['segmentation'].append(obj['poly'])
                 single_obj['iscrowd'] = 0

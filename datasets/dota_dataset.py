@@ -77,7 +77,7 @@ class DOTADataset(data.Dataset):
 
     def _load_annotation(self, index):
         root_dir = index.split('/images/P')[0]
-        label_dir = os.path.join(root_dir, 'labels')
+        label_dir = os.path.join(root_dir, 'labelTxt')
         _ , img_name = os.path.split(index)
         filename = os.path.join(label_dir, img_name[:-4]+'.txt')
         boxes, gt_classes = [], []

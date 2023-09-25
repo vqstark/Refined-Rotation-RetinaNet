@@ -303,19 +303,19 @@ if __name__ == '__main__':
     # raw_root_dir = r'/data-input/das_dota/DOTA/train'
     # split_root_dir = r'/data-input/das_dota/DOTA/trainsplit'
 
-    raw_root_dir = r'/data-input/das_dota/DOTA/val'
-    split_root_dir = r'/data-input/das_dota/DOTA/valsplit'
+    raw_root_dir = r'../../scene_test_imgs/test'
+    split_root_dir = r'../../scene_test_imgs/testsplit'
 
-    start = time.clock()
+    start = time.time()
     split = splitbase(raw_root_dir,
                       split_root_dir,
-                      gap=150,  
-                      subsize=800,
+                      gap=100,  
+                      subsize=500,
                       num_process=8
                       )
     split.splitdata(1)
 
     rm_background(split_root_dir)
 
-    elapsed = (time.clock() - start)
+    elapsed = (time.time() - start)
     print("Time used:", elapsed)

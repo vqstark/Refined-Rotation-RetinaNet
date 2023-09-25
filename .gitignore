@@ -4,5 +4,11 @@
 *.pkl
 *.pth
 *.DS_Store
+*.pyd
 .idea
 */__pycache__
+__pycache__/
+*build/
+scene_test_imgs/*
+patch_test_imgs/*
+outputs/*
