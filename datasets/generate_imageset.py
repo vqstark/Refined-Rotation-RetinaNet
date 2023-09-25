@@ -41,13 +41,24 @@ def remove_non_car_labels(dota_path):
     os.mkdir(car_val_label_path)
 
     files = sorted(glob.glob(os.path.join(train_label_path, '**.*' )))
-    
     for file in files:
         img_path, filename = os.path.split(file)
         with open(file, 'r') as f:
             lines = f.readlines()
         f.close()
         with open(os.path.join(dota_path, 'train', 'labelTxt', filename), 'w') as f:
+            for line in lines[2:]:
+                if line.split()[-2] in ['large-vehicle', 'small-vehicle']:
+                    f.write(line)
+        f.close()
+    
+    files = sorted(glob.glob(os.path.join(val_label_path, '**.*' )))
+    for file in files:
+        img_path, filename = os.path.split(file)
+        with open(file, 'r') as f:
+            lines = f.readlines()
+        f.close()
+        with open(os.path.join(dota_path, 'val', 'labelTxt', filename), 'w') as f:
             for line in lines[2:]:
                 if line.split()[-2] in ['large-vehicle', 'small-vehicle']:
                     f.write(line)
