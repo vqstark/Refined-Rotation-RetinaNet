@@ -72,7 +72,7 @@ def generate_image_ds(train_img_path, set_file):
             img_path, filename = os.path.split(file)
             name, extension = os.path.splitext(filename)
             if extension in ['.jpg', '.bmp','.png']:
-                annotation_path = img_path[:-6] + 'labels'
+                annotation_path = img_path[:-6] + 'labelTxt'
                 annotation_file = name + '.txt'
                 with open(os.path.join(annotation_path, annotation_file), 'r') as a:
                     lines = a.readlines()

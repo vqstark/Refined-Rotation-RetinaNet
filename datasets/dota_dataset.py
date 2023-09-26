@@ -21,10 +21,7 @@ class DOTADataset(data.Dataset):
         if dataset is not None:
             self.image_list = self._load_image_names()  
         if self.level == 1:
-            self.classes = ('__background__', 'plane', 'ship', 'storage-tank', 'baseball-diamond', 
-                                'tennis-court', 'basketball-court', 'ground-track-field', 'harbor', 
-                                'bridge', 'large-vehicle', 'small-vehicle', 'helicopter', 'roundabout', 
-                                'soccer-ball-field' , 'swimming-pool', 'container-crane')   
+            self.classes = ('__background__', 'large-vehicle', 'small-vehicle')   
         self.num_classes = len(self.classes)
         self.class_to_ind = dict(zip(self.classes, range(self.num_classes)))    
         self.augment = augment
@@ -84,7 +81,7 @@ class DOTADataset(data.Dataset):
         with open(filename,'r',encoding='utf-8-sig') as f:
             content = f.read()
             objects = content.split('\n')
-            for obj in objects[2:]:
+            for obj in objects:
                 if len(obj) != 0 :
                     *box, class_name, difficult = obj.split()
                     if difficult == 2:

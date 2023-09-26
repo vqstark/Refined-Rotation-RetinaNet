@@ -10,10 +10,7 @@ import math
     some basic functions which are useful for process DOTA data
 """
 
-classes = ['plane', 'ship', 'storage-tank', 'baseball-diamond', 
-                                'tennis-court', 'basketball-court', 'ground-track-field', 'harbor', 
-                                'bridge', 'large-vehicle', 'small-vehicle', 'helicopter', 'roundabout', 
-                                'soccer-ball-field' , 'swimming-pool', 'container-crane']
+classes = ['large-vehicle', 'small-vehicle']
 
 def custombasename(fullname):
     return os.path.basename(os.path.splitext(fullname)[0])

@@ -5,10 +5,10 @@ warm_epoch:1
 
 
 # setting
-num_classes: 16 #not include background
+num_classes: 2 #not include background
 
 # training
 epochs: 100
-batch_size: 1
+batch_size: 8
 save_interval: 50
 test_interval: 1
