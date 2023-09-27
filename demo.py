@@ -104,12 +104,12 @@ def demo(args):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Hyperparams')
-    parser.add_argument('--backbone', type=str, default='res34')
+    parser.add_argument('--backbone', type=str, default='res50')
     parser.add_argument('--hyp', type=str, default='hyp.py', help='hyper-parameter path')
     parser.add_argument('--weight', type=str, default='weights/last.pth')
     parser.add_argument('--ims_dir', type=str, default='patch_test_imgs')
     parser.add_argument('--type', type=str, default='patch', help = 'Detect on patch or scene')
     parser.add_argument('--save_img', type=str, default=True, help = 'Save detected images or not')
     parser.add_argument('--device', type=str, default='CPU', help = 'Your device')
-    parser.add_argument('--target_size', type=int, default=[500])
+    parser.add_argument('--target_size', type=int, default=[800])
     demo(parser.parse_args())

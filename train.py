@@ -154,13 +154,13 @@ def train_model(args, hyps):
         if hyps['test_interval']!= -1 and epoch % hyps['test_interval'] == 0 and epoch > 30 :
             if torch.cuda.device_count() > 1:
                 results = evaluate(target_size=args.target_size,
-                                   test_path=args.test_path,
+                                   test_path=args.val_path,
                                    model=model.module, 
                                    hyps=hyps,
                                    conf = 0.01 if final_epoch else 0.1)    
             else:
                 results = evaluate(target_size=args.target_size,
-                                   test_path=args.test_path,
+                                   test_path=args.val_path,
                                    model=model,
                                    hyps=hyps,
                                    conf = 0.01 if final_epoch else 0.1) #  p, r, map, f1
@@ -211,17 +211,17 @@ if __name__ == '__main__':
     # config
     parser.add_argument('--hyp', type=str, default='hyp.py', help='hyper-parameter path')
     # network
-    parser.add_argument('--backbone', type=str, default='res34')
+    parser.add_argument('--backbone', type=str, default='res50')
     parser.add_argument('--freeze_bn', type=bool, default=False)
     parser.add_argument('--weight', type=str, default='')   # 
     parser.add_argument('--multi-scale', action='store_true', help='adjust (67% - 150%) img_size every 10 batches')
     parser.add_argument('--train_path', type=str, default='/content/DOTA/trainsplit/train.txt')
     parser.add_argument('--val_path', type=str, default='/content/DOTA/valsplit/val.txt')
-    parser.add_argument('--training_size', type=int, default=500)
+    parser.add_argument('--training_size', type=int, default=800)
     parser.add_argument('--resume', action='store_true', help='resume training from last.pth')
     parser.add_argument('--load', action='store_true', help='load training from best.pth')
     parser.add_argument('--augment', action='store_true', help='data augment')
-    parser.add_argument('--target_size', type=int, default=[500])   
+    parser.add_argument('--target_size', type=int, default=[800])   
 
     arg = parser.parse_args()
     hyps = hyp_parse(arg.hyp)

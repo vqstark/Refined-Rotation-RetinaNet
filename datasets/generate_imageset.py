@@ -84,8 +84,8 @@ def generate_image_ds(train_img_path, set_file):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Hyperparams')
-    parser.add_argument('--target_size', type=int, default=500)
-    parser.add_argument('--overlap', type=int, default=100)
+    parser.add_argument('--target_size', type=int, default=800)
+    parser.add_argument('--overlap', type=int, default=150)
     parser.add_argument('--dota_path', type=str, default='/content/DOTA')
     args = parser.parse_args()
 

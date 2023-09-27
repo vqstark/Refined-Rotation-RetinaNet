@@ -41,8 +41,8 @@ class IntegratedLoss(nn.Module):
             bbox_annotation = annotations[j, :, :]
             bbox_annotation = bbox_annotation[bbox_annotation[:, -1] != -1]
             if bbox_annotation.shape[0] == 0:
-                cls_losses.append(torch.tensor(0).to(torch.float16).cuda())
-                reg_losses.append(torch.tensor(0).to(torch.float16).cuda())
+                cls_losses.append(torch.tensor(0).float().cuda())
+                reg_losses.append(torch.tensor(0).float().cuda())
                 continue
             classification = torch.clamp(classification, 1e-4, 1.0 - 1e-4)
             indicator = bbox_overlaps(
@@ -56,7 +56,7 @@ class IntegratedLoss(nn.Module):
                 thresh=1e-1
             )
             if not torch.is_tensor(ious):
-                ious = torch.from_numpy(ious).to(torch.float16).cuda()
+                ious = torch.from_numpy(ious).cuda()
             
             iou_max, iou_argmax = torch.max(ious, dim=1)
            
@@ -67,19 +67,19 @@ class IntegratedLoss(nn.Module):
                 positive_indices[argmax_gt[max_gt < iou_thres]]=1
               
             # cls loss
-            cls_targets = (torch.ones(classification.shape) * -1).to(torch.float16).cuda()
+            cls_targets = (torch.ones(classification.shape) * -1).cuda()
             cls_targets[torch.lt(iou_max, iou_thres - 0.1), :] = 0
             num_positive_anchors = positive_indices.sum()
             assigned_annotations = bbox_annotation[iou_argmax, :]
             cls_targets[positive_indices, :] = 0
             cls_targets[positive_indices, assigned_annotations[positive_indices, -1].long()] = 1
-            alpha_factor = torch.ones(cls_targets.shape).to(torch.float16).cuda() * self.alpha
+            alpha_factor = torch.ones(cls_targets.shape).cuda() * self.alpha
             alpha_factor = torch.where(torch.eq(cls_targets, 1.), alpha_factor, 1. - alpha_factor)
             focal_weight = torch.where(torch.eq(cls_targets, 1.), 1. - classification, classification)
             focal_weight = alpha_factor * torch.pow(focal_weight, self.gamma)
             bin_cross_entropy = -(cls_targets * torch.log(classification+1e-6) + (1.0 - cls_targets) * torch.log(1.0 - classification+1e-6))
             cls_loss = focal_weight * bin_cross_entropy 
-            cls_loss = torch.where(torch.ne(cls_targets, -1.0), cls_loss, torch.zeros(cls_loss.shape).to(torch.float16).cuda())
+            cls_loss = torch.where(torch.ne(cls_targets, -1.0), cls_loss, torch.zeros(cls_loss.shape).cuda())
             cls_losses.append(cls_loss.sum() / torch.clamp(num_positive_anchors.to(torch.float16), min=1.0))
             # reg loss
             if positive_indices.sum() > 0:
@@ -92,7 +92,7 @@ class IntegratedLoss(nn.Module):
                 if not torch.isfinite(reg_loss) :
                     import ipdb; ipdb.set_trace()
             else:
-                reg_losses.append(torch.tensor(0).to(torch.float16).cuda())
+                reg_losses.append(torch.tensor(0).float().cuda())
         loss_cls = torch.stack(cls_losses).mean(dim=0, keepdim=True)
         loss_reg = torch.stack(reg_losses).mean(dim=0, keepdim=True)
         return loss_cls, loss_reg

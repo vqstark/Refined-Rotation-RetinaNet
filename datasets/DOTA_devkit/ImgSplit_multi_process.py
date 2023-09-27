@@ -6,7 +6,6 @@ import os
 import codecs
 import numpy as np
 import math
-from dota_utils import GetFileFromThisRootDir
 import cv2
 import shapely.geometry as shgeo
 from . import dota_utils as util
@@ -262,7 +261,7 @@ class splitbase():
         """
         :param rate: resize rate before cut
         """
-        imagelist = GetFileFromThisRootDir(self.imagepath)
+        imagelist = util.GetFileFromThisRootDir(self.imagepath)
         imagenames = [util.custombasename(x) for x in imagelist if (util.custombasename(x) != 'Thumbs')]
         if self.num_process == 1:
             for name in tqdm(imagenames):
