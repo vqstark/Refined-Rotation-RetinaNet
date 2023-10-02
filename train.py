@@ -216,7 +216,7 @@ if __name__ == '__main__':
     parser.add_argument('--weight', type=str, default='')   # 
     parser.add_argument('--multi-scale', action='store_true', help='adjust (67% - 150%) img_size every 10 batches')
     parser.add_argument('--train_path', type=str, default='/content/DOTA/trainsplit/train.txt')
-    parser.add_argument('--val_path', type=str, default='/content/DOTA/valsplit/val.txt')
+    parser.add_argument('--val_path', type=str, default='/content/DOTA/val')
     parser.add_argument('--training_size', type=int, default=800)
     parser.add_argument('--resume', action='store_true', help='resume training from last.pth')
     parser.add_argument('--load', action='store_true', help='load training from best.pth')

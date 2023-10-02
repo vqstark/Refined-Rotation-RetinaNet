@@ -61,7 +61,7 @@ def demo(args):
                 else:
                     pts = np.array([rbox_2_quad(bbox[:5]).reshape((4, 2))], dtype=np.int32)
                     cv2.drawContours(src, pts, 0, thickness=2, color=colors[int(cls-1)])
-                    put_label = True
+                    put_label = False
                     plot_anchor = False
                     if put_label:
                         label = ds.return_class(cls) + str(' %.2f' % scores)

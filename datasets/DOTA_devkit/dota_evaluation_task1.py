@@ -328,8 +328,7 @@ def voc_eval(detpath,
 
 def eval_map(detpath,annopath,imagesetfile, use_07_metric=False):
 
-    classnames = ['plane', 'baseball-diamond', 'bridge', 'ground-track-field', 'small-vehicle', 'large-vehicle', 'ship', 'tennis-court',
-                'basketball-court', 'storage-tank',  'soccer-ball-field', 'roundabout', 'harbor', 'swimming-pool', 'helicopter']
+    classnames = ['small-vehicle', 'large-vehicle']
     classaps = []
     map = 0
     for classname in classnames:
