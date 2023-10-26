@@ -10,5 +10,9 @@
 __pycache__/
 *build/
 scene_test_imgs/*
-patch_test_imgs/*
+patch_test/*
 outputs/*
+app.py
+*.png
+templates
+static

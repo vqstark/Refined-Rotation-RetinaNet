@@ -299,11 +299,11 @@ def rm_background(root_dir):
 
 if __name__ == '__main__':
     # example usage of ImgSplit
-    # raw_root_dir = r'/data-input/das_dota/DOTA/train'
-    # split_root_dir = r'/data-input/das_dota/DOTA/trainsplit'
+    raw_root_dir = r'../DOTA/val'
+    split_root_dir = r'../DOTA/valsplit'
 
-    raw_root_dir = r'../../scene_test_imgs/test'
-    split_root_dir = r'../../scene_test_imgs/testsplit'
+    # raw_root_dir = r'../../scene_test_imgs/test'
+    # split_root_dir = r'../../scene_test_imgs/testsplit'
 
     start = time.time()
     split = splitbase(raw_root_dir,

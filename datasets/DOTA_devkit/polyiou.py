@@ -13,7 +13,7 @@ from sys import version_info as _swig_python_version_info
 
 import pylibimport
 
-_polyiou = pylibimport.import_module('D:\DATN\Refined-Rotation-RetinaNet\datasets\DOTA_devkit\_polyiou.cp38-win_amd64.pyd', import_chain='_polyiou', reset_modules=True)
+_polyiou = pylibimport.import_module('datasets/DOTA_devkit/_polyiou.cp310-win_amd64.pyd', import_chain='_polyiou', reset_modules=True)
 
 try:
     import builtins as __builtin__

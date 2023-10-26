@@ -120,7 +120,7 @@ if __name__ == '__main__':
     parser.add_argument('--weight', type=str, default='weights/best.pth')
     parser.add_argument('--target_size', dest='target_size', default=[800], type=int) 
     parser.add_argument('--hyp', type=str, default='hyp.py', help='hyper-parameter path')
-    parser.add_argument('--test_path', nargs='?', type=str, default='scene_test_imgs/test', help='Run ImgSplit*.py before eval')
+    parser.add_argument('--test_path', nargs='?', type=str, default="F:/Quan/DOTA/val", help='Run ImgSplit*.py before eval')
 
     arg = parser.parse_args()
     hyps = hyp_parse(arg.hyp)

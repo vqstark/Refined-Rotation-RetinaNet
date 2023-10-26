@@ -18,6 +18,9 @@ from datasets import *
 from utils.utils import *
 # from torch_warmup_lr import WarmupLR
 
+import warnings
+warnings.filterwarnings("ignore")
+
 
 def train_model(args, hyps):
     #  parse configs
@@ -151,7 +154,7 @@ def train_model(args, hyps):
         final_epoch = epoch + 1 == epochs
         
         # eval
-        if hyps['test_interval']!= -1 and epoch % hyps['test_interval'] == 0 and epoch > 30 :
+        if hyps['test_interval']!= -1 and epoch % hyps['test_interval'] == 0:
             if torch.cuda.device_count() > 1:
                 results = evaluate(target_size=args.target_size,
                                    test_path=args.val_path,
