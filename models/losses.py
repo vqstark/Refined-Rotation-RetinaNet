@@ -97,6 +97,63 @@ class IntegratedLoss(nn.Module):
         loss_reg = torch.stack(reg_losses).mean(dim=0, keepdim=True)
         return loss_cls, loss_reg
 
+
+class RegressLoss(nn.Module):
+    def __init__(self, func='smooth'):
+        super(RegressLoss, self).__init__()
+        self.box_coder = BoxCoder()
+        if func == 'smooth':
+            self.criteron = smooth_l1_loss
+        elif func == 'mse':
+            self.criteron = F.mse_loss
+        elif func == 'balanced':
+            self.criteron = balanced_l1_loss
+        else:
+            raise NotImplementedError
+            
+    def forward(self, regressions, anchors, annotations, iou_thres=0.5):
+        losses = []
+        batch_size = regressions.shape[0]
+        all_pred_boxes = self.box_coder.decode(anchors, regressions, mode='xywht')
+        for j in range(batch_size):
+            regression = regressions[j, :, :]
+            bbox_annotation = annotations[j, :, :]
+            bbox_annotation = bbox_annotation[bbox_annotation[:, -1] != -1]
+            pred_boxes = all_pred_boxes[j, :, :]
+            if bbox_annotation.shape[0] == 0:
+                losses.append(torch.tensor(0).float().cuda())
+                continue
+            indicator = bbox_overlaps(
+                min_area_square(anchors[j, :, :]),
+                min_area_square(bbox_annotation[:, :-1])
+            )
+            overlaps = rbox_overlaps(
+                anchors[j, :, :].cpu().numpy(),
+                bbox_annotation[:, :-1].cpu().numpy(),
+                indicator.cpu().numpy(),
+                thresh=1e-1
+            )
+            if not torch.is_tensor(overlaps):
+                overlaps = torch.from_numpy(overlaps).cuda()
+
+            iou_max, iou_argmax = torch.max(overlaps, dim=1)
+            positive_indices = torch.ge(iou_max, iou_thres)
+            # MaxIoU assigner
+            max_gt, argmax_gt = overlaps.max(0) 
+            if (max_gt < iou_thres).any():
+                positive_indices[argmax_gt[max_gt < iou_thres]]=1
+
+            assigned_annotations = bbox_annotation[iou_argmax, :]
+            if positive_indices.sum() > 0:
+                all_rois = anchors[j, positive_indices, :]
+                gt_boxes = assigned_annotations[positive_indices, :]
+                targets = self.box_coder.encode(all_rois, gt_boxes)
+                loss = self.criteron(regression[positive_indices, :], targets)
+                losses.append(loss)
+            else:
+                losses.append(torch.tensor(0).float().cuda())
+        return torch.stack(losses).mean(dim=0, keepdim=True)
+
     
 def smooth_l1_loss(inputs,
                    targets,
