@@ -12,3 +12,4 @@ epochs: 100
 batch_size: 8
 save_interval: 50
 test_interval: 1
+num_refining: 1

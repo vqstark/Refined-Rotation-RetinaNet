@@ -37,6 +37,7 @@ def make_zip(source_dir, output_filename):
 def dota_evaluate(model, 
                   target_size, 
                   test_path,
+                  merge_img = False,
                   conf = 0.01):
     
     root_data, evaldata = os.path.split(test_path)
@@ -46,6 +47,7 @@ def dota_evaluate(model,
     res_dir = os.path.join(root_dir, 'detections')
     integrated_dir = os.path.join(root_dir, 'integrated')
     merged_dir = os.path.join(root_dir, 'merged')
+    dota_out = os.path.join(root_dir, 'dota_out')
 
     if  os.path.exists(root_dir):
         shutil.rmtree(root_dir)
@@ -78,7 +80,11 @@ def dota_evaluate(model,
                     res[k, 4], res[k, 5], res[k, 6], res[k, 7],
                     ds.return_class(dets[k, 0]), im_name[:-4], dets[k, 1],)
                 )
-    ResultMerge(res_dir, integrated_dir, merged_dir)
+    if not merge_img:
+        ResultMerge(res_dir, integrated_dir, merged_dir)
+    else:
+        ResultMerge(res_dir, integrated_dir, merged_dir, dota_out)
+
     ## calc mAP
     mAP, classaps = task1_eval(merged_dir, test_path)
     # # display result
@@ -93,6 +99,7 @@ def evaluate(target_size,
              weight=None, 
              model=None,
              hyps=None,
+             merge_img = False,
              conf=0.3):
     if model is None:
         model = RetinaNet(backbone=backbone,hyps=hyps)
@@ -110,7 +117,7 @@ def evaluate(target_size,
                 model.load_state_dict(chkpt)
 
     model.eval()
-    results = dota_evaluate(model, target_size, test_path, conf)
+    results = dota_evaluate(model, target_size, test_path, merge_img, conf)
     return results
 
 
